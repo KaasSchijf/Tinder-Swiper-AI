@@ -9,7 +9,7 @@ Now you will have to pip install the requirements.
 pip install -r path/to/requirements.txt
 ```
 
-Now you can run the TinderSwiper.py file and select the first option, it wil send a verification code to your phone.
+Run the TinderSwiper.py file and select the first option, it wil send a verification code to your phone.
 Input this into the program and it should start running.
 
 ## Functionality
