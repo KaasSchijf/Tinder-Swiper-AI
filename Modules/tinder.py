@@ -25,18 +25,41 @@ class tinderAPI():
         self._token = token
 
     def nearby_persons(self):
-        data = None
-        try:
-            data = requests.get(TINDER_URL + "/v2/recs/core", headers={"X-Auth-Token": self._token})
-            data = list(map(lambda user: Person(user, self), data.json()["data"]["results"]))
-        except:
-            print('Nothing found, update your token...', data.text)
-            input()
+        data = requests.get(TINDER_URL + "/v2/recs/core", headers={"X-Auth-Token": self._token})
+        data = list(map(lambda user: Person(user, self), data.json()["data"]["results"]))
         return data
 
     def like(self, person):
         data = requests.post(TINDER_URL + f"/like/{person.id}", data={"content_hash": person.content_hash, "s_number": person.s_number}, headers={"X-Auth-Token": self._token}).text
         return data
+
+    def refreshtoken(self, account, index):
+        data = 'RR\n' + account['Refreshtoken']
+        headers = {
+            'content-type': 'application/x-google-protobuf',
+            'dnt': '1',
+            'is-created-as-guest': 'false',
+            'origin': 'https://tinder.com',
+            'persistent-device-id': '35bb0250-7981-4258-bead-8cd89bff674d',
+            'platform': 'android',
+            'tinder-version': '3.41.0',
+            'user-session-id': 'null',
+            'user-session-time-elapsed': '1',
+            'x-auth-token': self._token,
+        }
+
+        response = requests.post('https://api.gotinder.com/v3/auth/login?locale=nl', headers=headers, data=data)
+        print(response.text)
+
+        token = response.text.split('$')[1].split('"')[0]
+        refreshtoken = 'Pey' + response.text.split('Pey')[1].split('')[0]
+
+        df = pd.read_csv("Accounts.csv")
+        df.loc[index, "Token"], account["Refreshtoken"] = token
+        df.loc[index, "Refreshtoken"], account["Token"] = refreshtoken
+        df.to_csv("Accounts.csv", index=False)
+        print(colored(f"[{str(datetime.datetime.now())}] New Login token generated!", 'green'))
+        return account
 
     def dislike(self, person):
         requests.get(TINDER_URL + f"/pass/{person.id}?s_number={person.s_number}&content_hash={person.content_hash}", headers={"X-Auth-Token": self._token}).json()
@@ -151,9 +174,11 @@ def tokengen(accounts, index):
                 response = s.post('https://api.gotinder.com/v3/auth/login?locale=nl', headers=headers, data=data)
 
             token = response.text.split('$')[1].split('"')[0]
+            refreshtoken = 'Pey' + response.text.split('Pey')[1].split('')[0]
 
             df = pd.read_csv("Accounts.csv")
             df.loc[index, "Token"] = token
+            df.loc[index, "Refreshtoken"] = refreshtoken
             df.to_csv("Accounts.csv", index=False)
             print(colored(f"[{str(datetime.datetime.now())}] Login token generated!", 'green'))
             return token
@@ -163,7 +188,7 @@ def tokengen(accounts, index):
         print('Error logging into [' + accounts[index]['Phone'] + ']...')
 
 
-def autoliking(account):
+def autoliking(account, index):
     global liked, disliked, newmatches
     active = True
     api = tinderAPI(account['Token'])
@@ -180,10 +205,14 @@ def autoliking(account):
 
                 classifier = Classifier(graph="./Modules/tf/training_output/retrained_graph.pb", labels="./Modules/tf/training_output/retrained_labels.txt")
 
-                end_time = time.time() + 60 * 60 * 2
+                end_time = time.time() + 60 * 60 * 4
                 while active:
                     try:
-                        persons = api.nearby_persons()
+                        try:
+                            persons = api.nearby_persons()
+                        except:
+                            print(colored( f"{account['Name']} [{str(datetime.datetime.now())}] Renewing token...",'red'))
+                            account = api.refreshtoken(account, index)
 
                         #check if new match
                         matches = api.matches()
@@ -197,7 +226,7 @@ def autoliking(account):
                         for person in persons:
                             #stops after 2 hours then switches accounts
                             if time.time() > end_time:
-                                print(colored( f"{account['Name']} [{str(datetime.datetime.now())}] 2 hours passed...",'red'))
+                                print(colored( f"{account['Name']} [{str(datetime.datetime.now())}] 4 hours passed...",'red'))
                                 active = False
                                 break
 
@@ -241,9 +270,9 @@ def start(accounts):
             accounts[index]['Token'] = tokengen(accounts, index)
 
     while True:
-        for account in accounts:
-            autoliking(account)
+        for index in range(len(accounts)):
+            autoliking(accounts[index], index)
 
-            sleeptime = random.randint(18010, 18100) / len(accounts)
+            sleeptime = random.randint(28010, 28100) / len(accounts)
             print(colored(f"{account['Name']} [{str(datetime.datetime.now())}] Sleeping for {str(sleeptime / 60)} Minutes...",'red'))
             time.sleep(sleeptime)
