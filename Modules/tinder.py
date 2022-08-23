@@ -57,6 +57,8 @@ class tinderAPI():
         df = pd.read_csv("Accounts.csv")
         df.loc[index, "Token"] = token
         df.loc[index, "Refreshtoken"] = refreshtoken
+        account['Token'] = token
+        account["Refreshtoken"] = refreshtoken
         df.to_csv("Accounts.csv", index=False)
         print(colored(f"[{str(datetime.datetime.now())}] New Login token generated!", 'green'))
         return account
