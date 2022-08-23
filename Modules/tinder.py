@@ -55,8 +55,8 @@ class tinderAPI():
         refreshtoken = 'Pey' + response.text.split('Pey')[1].split('')[0]
 
         df = pd.read_csv("Accounts.csv")
-        df.loc[index, "Token"], account["Refreshtoken"] = token
-        df.loc[index, "Refreshtoken"], account["Token"] = refreshtoken
+        df.loc[index, "Token"] = token
+        df.loc[index, "Refreshtoken"] = refreshtoken
         df.to_csv("Accounts.csv", index=False)
         print(colored(f"[{str(datetime.datetime.now())}] New Login token generated!", 'green'))
         return account
@@ -205,7 +205,7 @@ def autoliking(account, index):
 
                 classifier = Classifier(graph="./Modules/tf/training_output/retrained_graph.pb", labels="./Modules/tf/training_output/retrained_labels.txt")
 
-                end_time = time.time() + 60 * 60 * 4
+                end_time = time.time() + 60 * 60 * 2
                 while active:
                     try:
                         try:
@@ -226,7 +226,7 @@ def autoliking(account, index):
                         for person in persons:
                             #stops after 2 hours then switches accounts
                             if time.time() > end_time:
-                                print(colored( f"{account['Name']} [{str(datetime.datetime.now())}] 4 hours passed...",'red'))
+                                print(colored( f"{account['Name']} [{str(datetime.datetime.now())}] 2 hours passed...",'red'))
                                 active = False
                                 break
 
@@ -273,6 +273,6 @@ def start(accounts):
         for index in range(len(accounts)):
             autoliking(accounts[index], index)
 
-            sleeptime = random.randint(28010, 28100) / len(accounts)
-            print(colored(f"{account['Name']} [{str(datetime.datetime.now())}] Sleeping for {str(sleeptime / 60)} Minutes...",'red'))
+            sleeptime = random.randint(18010, 18100) / len(accounts)
+            print(colored(f"{accounts[index]['Name']} [{str(datetime.datetime.now())}] Sleeping for {str(sleeptime / 60)} Minutes...",'red'))
             time.sleep(sleeptime)
