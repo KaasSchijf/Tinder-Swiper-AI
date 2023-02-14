@@ -42,22 +42,22 @@ class tinderAPI():
             'origin': 'https://tinder.com',
             'persistent-device-id': '35bb0250-7981-4258-bead-8cd89bff674d',
             'platform': 'android',
-            'tinder-version': '3.41.0',
+            'tinder-version': '4.4.2',
             'user-session-id': 'null',
             'user-session-time-elapsed': '1',
             'x-auth-token': self._token,
         }
 
-        response = requests.post('https://api.gotinder.com/v3/auth/login?locale=nl', headers=headers, data=data)
+        response = requests.post('https://api.gotinder.com/v3/auth/login', headers=headers, data=data)
         print(response.text)
 
-        token = response.text.split('$')[1].split('"')[0]
+        self._token = response.text.split('$')[1].split('"')[0]
         refreshtoken = 'Pey' + response.text.split('Pey')[1].split('')[0]
 
         df = pd.read_csv("Accounts.csv")
-        df.loc[index, "Token"] = token
+        df.loc[index, "Token"] = self._token
         df.loc[index, "Refreshtoken"] = refreshtoken
-        account['Token'] = token
+        account['Token'] = self._token
         account["Refreshtoken"] = refreshtoken
         df.to_csv("Accounts.csv", index=False)
         print(colored(f"[{str(datetime.datetime.now())}] New Login token generated!", 'green'))
@@ -150,13 +150,13 @@ def tokengen(accounts, index):
             'authority': 'api.gotinder.com',
             'app-session-id': 'f45c2040-3b7a-440e-9285-81a0caef9c9f',
             'app-session-time-elapsed': '1',
-            'app-version': '1033900',
+            'app-version': '1040402',
             'content-type': 'application/x-google-protobuf',
             'is-created-as-guest': 'false',
             'origin': 'https://tinder.com',
             'persistent-device-id': '35bb0250-7981-4258-bead-8cd89bff674d',
             'platform': 'android',
-            'tinder-version': '3.39.0',
+            'tinder-version': '4.4.2',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36',
             'user-session-id': 'null',
             'user-session-time-elapsed': '1',
@@ -164,16 +164,16 @@ def tokengen(accounts, index):
 
         data = '''\n\r\n''' + phone
         print(colored(f"[{str(datetime.datetime.now())}] Logging into [{accounts[index]['Phone']}]...", 'yellow'))
-        response = s.post('https://api.gotinder.com/v3/auth/login?locale=nl', headers=headers, data=data)
+        response = s.post('https://api.gotinder.com/v3/auth/login', headers=headers, data=data)
         if phone in response.text:
             phonecode = input("\n\nVerification Code" + colored(' > ', 'magenta'))
             data = '''\n\r\n''' + phone + '' + str(phonecode)
-            response = s.post('https://api.gotinder.com/v3/auth/login?locale=nl', headers=headers, data=data)
+            response = s.post('https://api.gotinder.com/v3/auth/login', headers=headers, data=data)
             if '@' in response.text:
                 key = 'Pey' + response.text.split('Pey')[1].split('')[0]
                 emailcode = input("\n\nEmail Code" + colored(' > ', 'magenta'))
                 data = '''*\''' + str(emailcode) + '''R\n''' + key
-                response = s.post('https://api.gotinder.com/v3/auth/login?locale=nl', headers=headers, data=data)
+                response = s.post('https://api.gotinder.com/v3/auth/loginl', headers=headers, data=data)
 
             token = response.text.split('$')[1].split('"')[0]
             refreshtoken = 'Pey' + response.text.split('Pey')[1].split('')[0]
